@@ -1,7 +1,13 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "./user.entity";
 
+export enum TaskStatus {
+  PENDING = "pending",
+  INPROGRESS = "in progress",
+  COMPLETE = "complete"
+}
 @Entity()
-export class User {
+export class Task {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -11,8 +17,12 @@ export class User {
   @Column()
   description: string;
 
-  @Column()
-  status: string;
+  @Column({
+    type: "enum",
+    enum: TaskStatus,
+    default: TaskStatus.PENDING
+  })
+  status: TaskStatus;
 
   @Column({
     type: 'timestamp',
@@ -20,14 +30,14 @@ export class User {
   })
   deadline: string;
 
-  @Column()
+  @Column({default: ""})
   comments: string;
 
   @ManyToOne(() => User)
   @JoinColumn()
   createdBy: User;
 
-  @Column()
+  @Column({default: ""})
   tags: string;
 
   @Column()
