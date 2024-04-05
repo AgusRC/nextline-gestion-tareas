@@ -40,7 +40,7 @@ export class Task {
   @Column({default: ""})
   tags: string;
 
-  @Column()
+  @Column({nullable: true})
   file: string;
 
   @Column({
