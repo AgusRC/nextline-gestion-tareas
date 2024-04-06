@@ -1,3 +1,5 @@
+import { TaskStatus } from "src/entities/task.entity";
+
 export class TaskDTO {
   title: string;
   description: string;
@@ -5,4 +7,5 @@ export class TaskDTO {
   comments?: string;
   tags?: string;
   file?: string;
+  status?: TaskStatus;
 }

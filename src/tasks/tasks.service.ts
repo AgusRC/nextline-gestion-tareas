@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { TaskDTO } from 'src/dtos/task.dto';
-import { Task } from 'src/entities/task.entity';
+import { Task, TaskStatus } from 'src/entities/task.entity';
 import { PaginationTaskInterface, TaskInterface } from 'src/interfaces/task-interface.interface';
 import { DataSource } from 'typeorm';
 
@@ -16,7 +16,7 @@ export class TasksService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      //verificar title
+      //verificar existencia de title
       if(
         await queryRunner.manager.findOne(Task, {
         where: {
@@ -30,9 +30,9 @@ export class TasksService {
       newTask.description = taskdto.description;
       newTask.deadline = new Date(taskdto.deadline).toISOString();
 
+      // verificar campos opcionales
       newTask.comments = taskdto.comments ? taskdto.comments : "";
       newTask.tags = taskdto.tags ? taskdto.tags : "";
-
       newTask.file = taskdto.file ? taskdto.file : null;
 
       await queryRunner.manager.save(newTask);
@@ -48,10 +48,44 @@ export class TasksService {
     }
   }
 
+  async updateTask(taskId: number, taskdto: TaskDTO): Promise<any> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      //
+      let taskToUpdate = await queryRunner.manager.findOne(Task, { where: {id: taskId}});
+
+      if(!taskToUpdate) 
+        throw new HttpException("Task id = " + taskId + " not found", HttpStatus.NOT_FOUND)
+
+      taskToUpdate.title = taskdto.title;
+      taskToUpdate.description = taskdto.description;
+      taskToUpdate.deadline = new Date(taskdto.deadline).toISOString();
+
+      taskToUpdate.comments = taskdto.comments ? taskdto.comments : "";
+      taskToUpdate.tags = taskdto.tags ? taskdto.tags : "";
+      taskToUpdate.file = taskdto.file ? taskdto.file : null;
+
+      taskToUpdate.status = taskdto.status ? taskdto.status : taskToUpdate.status
+
+      taskToUpdate.updatedDate = new Date().toISOString();
+
+      await queryRunner.manager.update(Task, taskId, taskToUpdate)
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+      console.log(error)
+      await queryRunner.rollbackTransaction();
+      throw error
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
   async getAllTask(params): Promise<PaginationTaskInterface> {
     const queryRunner = this.dataSource.createQueryRunner();
-    //
-    console.log(params)
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { TaskDTO } from 'src/dtos/task.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -32,7 +32,6 @@ export class TasksController {
   ) {
 
     if(file) {
-
       if(
         !file.mimetype.includes('pdf') &&
         !file.mimetype.includes('jpg') &&
@@ -47,5 +46,31 @@ export class TasksController {
       taskdto.file = Buffer.from(file.buffer).toString('hex');
     }
     return await this._tasksService.createTask(taskdto);
+  }
+
+  @UseInterceptors(FileInterceptor('file'))
+  @Put('editTask/:taskId')
+  async editTask(
+    @Param('taskId') taskId: number,
+    @Body() taskdto: TaskDTO,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+
+    if(file) {
+      if(
+        !file.mimetype.includes('pdf') &&
+        !file.mimetype.includes('jpg') &&
+        !file.mimetype.includes('jpeg') &&
+        !file.mimetype.includes('png')
+      ) {
+        throw new HttpException("file format not valid", HttpStatus.BAD_REQUEST)
+      }
+      if (file.size > 5*1024*1024) 
+        throw new HttpException("file must be <5Mb", HttpStatus.BAD_REQUEST)
+
+      taskdto.file = Buffer.from(file.buffer).toString('hex');
+    }
+    
+    return await this._tasksService.updateTask(taskId, taskdto)
   }
 }
