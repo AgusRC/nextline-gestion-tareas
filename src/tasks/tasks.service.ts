@@ -68,7 +68,13 @@ export class TasksService {
       taskToUpdate.tags = taskdto.tags ? taskdto.tags : "";
       taskToUpdate.file = taskdto.file ? taskdto.file : null;
 
-      taskToUpdate.status = taskdto.status ? taskdto.status : taskToUpdate.status
+     
+
+      if(taskdto.status) {
+        if(!Object.values(TaskStatus).includes(taskdto.status))
+          throw new HttpException("status must be 'pending', 'in progress', or 'complete'", HttpStatus.BAD_REQUEST)
+        taskToUpdate.status = taskdto.status
+      }
 
       taskToUpdate.updatedDate = new Date().toISOString();
 
