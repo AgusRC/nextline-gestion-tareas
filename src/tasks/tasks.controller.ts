@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { TaskDTO } from 'src/dtos/task.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -8,6 +8,14 @@ export class TasksController {
   constructor(
     private readonly _tasksService: TasksService,
   ) {}
+
+  @Get('allTasks/pageSize/:pageSize/pageNumber/:pageNumber')
+  async getAllTasks(
+    @Param('pageSize') pageSize: number,
+    @Param('pageNumber') pageNumber: number,
+  ) {
+    return await this._tasksService.getAllTask({pageSize, pageNumber});
+  }
 
   @UseGuards(JwtAuthGuard)
   @Post('registerTask')
