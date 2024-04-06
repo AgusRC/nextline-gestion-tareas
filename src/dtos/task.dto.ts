@@ -4,4 +4,5 @@ export class TaskDTO {
   deadline: string;
   comments?: string;
   tags?: string;
+  file?: string;
 }

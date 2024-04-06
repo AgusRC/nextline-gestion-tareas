@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { TaskDTO } from 'src/dtos/task.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('tasks')
 export class TasksController {
@@ -22,9 +23,17 @@ export class TasksController {
     return await this._tasksService.getTaskDetail(taskId)
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
   @Post('registerTask')
-  async registreTask(@Body() taskdto: TaskDTO) {
+  async registreTask(
+    @Body() taskdto: TaskDTO,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    if(file) {
+      console.log("file")
+      taskdto.file = Buffer.from(file.buffer).toString('hex');
+    }
     return await this._tasksService.createTask(taskdto);
   }
 }

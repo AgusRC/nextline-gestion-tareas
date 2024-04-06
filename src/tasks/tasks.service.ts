@@ -33,6 +33,8 @@ export class TasksService {
       newTask.comments = taskdto.comments ? taskdto.comments : "";
       newTask.tags = taskdto.tags ? taskdto.tags : "";
 
+      newTask.file = taskdto.file ? taskdto.file : null;
+
       await queryRunner.manager.save(newTask);
 
       await queryRunner.commitTransaction();
