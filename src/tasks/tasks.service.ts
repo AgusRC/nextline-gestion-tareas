@@ -162,4 +162,29 @@ export class TasksService {
       await queryRunner.release();
     }
   }
+
+  async deleteTask(taskId: number) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      let taskToDelete = await queryRunner.manager.findOne(Task, {where: {id: taskId}})
+
+      if(!taskToDelete) 
+        throw new HttpException("task id = " + taskId + " not found", HttpStatus.NOT_FOUND)
+
+      let del = await queryRunner.manager.delete(Task, {id: taskId})
+      console.log(del)
+
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+      console.log(error)
+      await queryRunner.rollbackTransaction();
+      throw error
+    } finally {
+      await queryRunner.release();
+    }
+  }
 }

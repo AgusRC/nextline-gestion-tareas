@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpException, HttpStatus, Param, Post, Put, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { TaskDTO } from 'src/dtos/task.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -71,6 +71,11 @@ export class TasksController {
       taskdto.file = Buffer.from(file.buffer).toString('hex');
     }
     
-    return await this._tasksService.updateTask(taskId, taskdto)
+    return await this._tasksService.updateTask(taskId, taskdto);
+  }
+
+  @Delete('task/:taskId')
+  async deleteTask( @Param('taskId') taskId: number ) {
+    return await this._tasksService.deleteTask(taskId);
   }
 }
