@@ -97,18 +97,25 @@ export class TasksService {
     }
   }
 
-  async getTaskDetail() {
+  async getTaskDetail(taskId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      //
+      let task = await queryRunner.manager.findOne(Task, {
+        where: {id: taskId}
+      });
+
+      if(!task) 
+        throw new HttpException("task id = " + taskId + " not found", HttpStatus.NOT_FOUND);
+
       await queryRunner.commitTransaction();
+      return task;
     } catch (error) {
-      console.log(error)
+      console.log(error);
       await queryRunner.rollbackTransaction();
-      throw error
+      throw error;
     } finally {
       await queryRunner.release();
     }

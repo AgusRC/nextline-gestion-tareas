@@ -17,6 +17,11 @@ export class TasksController {
     return await this._tasksService.getAllTask({pageSize, pageNumber});
   }
 
+  @Get("task/:taskId")
+  async getTaskById(@Param('taskId') taskId: number) {
+    return await this._tasksService.getTaskDetail(taskId)
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post('registerTask')
   async registreTask(@Body() taskdto: TaskDTO) {
