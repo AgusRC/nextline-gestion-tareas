@@ -10,7 +10,7 @@ export class TasksService {
     private readonly dataSource: DataSource,
   ){}
 
-  async createTask(taskdto: TaskDTO): Promise<any> {
+  async createTask(taskdto: TaskDTO): Promise<number> {
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
@@ -38,7 +38,7 @@ export class TasksService {
       await queryRunner.manager.save(newTask);
 
       await queryRunner.commitTransaction();
-      return newTask
+      return newTask.id
     } catch (error) {
       console.log(error)
       await queryRunner.rollbackTransaction();
