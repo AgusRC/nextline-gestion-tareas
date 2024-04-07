@@ -3,7 +3,7 @@ import { TaskDTO } from 'src/dtos/task.dto';
 import { Binnacle } from 'src/entities/binnacle.entity';
 import { Task, TaskStatus } from 'src/entities/task.entity';
 import { PaginationTaskInterface, TaskInterface } from 'src/interfaces/task-interface.interface';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 
 @Injectable()
 export class TasksService {
@@ -21,7 +21,8 @@ export class TasksService {
       if(
         await queryRunner.manager.findOne(Task, {
         where: {
-          title: taskdto.title
+          title: taskdto.title,
+          active: true
           }
         }
       )) throw new HttpException("title " + taskdto.title + " already exist", HttpStatus.BAD_REQUEST)
@@ -39,10 +40,7 @@ export class TasksService {
       await queryRunner.manager.save(newTask);
 
       // crear bitacora inicial
-      let newBinnacle = new Binnacle();
-      newBinnacle.task = newTask;
-      newBinnacle.history = JSON.stringify(newTask);
-      await queryRunner.manager.save(newBinnacle);
+      this.registerBinnacle(queryRunner, newTask);
 
       await queryRunner.commitTransaction();
       return newTask.id
@@ -70,6 +68,7 @@ export class TasksService {
       taskToUpdate.title = taskdto.title;
       taskToUpdate.description = taskdto.description;
       taskToUpdate.deadline = new Date(taskdto.deadline).toISOString();
+      taskToUpdate.updatedDate = new Date().toISOString();
 
       taskToUpdate.comments = taskdto.comments ? taskdto.comments : "";
       taskToUpdate.tags = taskdto.tags ? taskdto.tags : "";
@@ -84,6 +83,9 @@ export class TasksService {
       }
 
       taskToUpdate.updatedDate = new Date().toISOString();
+
+      // registrar bitacora
+      this.registerBinnacle(queryRunner, taskToUpdate);
 
       await queryRunner.manager.update(Task, taskId, taskToUpdate)
       await queryRunner.commitTransaction();
@@ -104,7 +106,8 @@ export class TasksService {
     try {
       let allTask = await queryRunner.manager.find(Task, {
         take: params.pageSize,
-        skip: params.pageSize * (params.pageNumber-1)
+        skip: params.pageSize * (params.pageNumber-1),
+        where: {active: true}
       });
 
       let totalTasksCount = await queryRunner.manager.count(Task, {});
@@ -153,7 +156,10 @@ export class TasksService {
     await queryRunner.startTransaction();
     try {
       let task = await queryRunner.manager.findOne(Task, {
-        where: {id: taskId}
+        where: {
+          id: taskId,
+          active: true
+        }
       });
 
       if(!task) 
@@ -176,12 +182,24 @@ export class TasksService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      let taskToDelete = await queryRunner.manager.findOne(Task, {where: {id: taskId}})
+      let taskToDelete = await queryRunner.manager.findOne(Task, {
+        where: {
+          id: taskId,
+          active: true,
+        }
+      })
+      console.log(taskToDelete)
 
       if(!taskToDelete) 
         throw new HttpException("task id = " + taskId + " not found", HttpStatus.NOT_FOUND)
 
-      let del = await queryRunner.manager.delete(Task, {id: taskId})
+      taskToDelete.active = false;
+      taskToDelete.updatedDate = new Date().toISOString();
+
+      await queryRunner.manager.save(taskToDelete);
+
+      // registrar bitacora
+      this.registerBinnacle(queryRunner, taskToDelete);
 
       await queryRunner.commitTransaction();
       return true;
@@ -191,6 +209,17 @@ export class TasksService {
       throw error
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  private async registerBinnacle(queryRunner: QueryRunner, task: Task) {
+    try {
+      let newBinnacle = new Binnacle();
+      newBinnacle.task = task;
+      newBinnacle.history = JSON.stringify(task);
+      await queryRunner.manager.save(newBinnacle);
+    } catch (error) {
+      throw error
     }
   }
 }

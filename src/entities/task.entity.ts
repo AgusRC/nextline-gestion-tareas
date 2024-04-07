@@ -11,7 +11,7 @@ export class Task {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({unique: true})
+  @Column()
   title: string;
 
   @Column()
