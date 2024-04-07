@@ -6,6 +6,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { TokenData } from 'src/decorators/token.decorator';
 import { TokenInterface } from 'src/interfaces/token-interface.interface';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ParamsDTO } from 'src/dtos/params.dto';
 
 @ApiTags('Tasks')
 @ApiBearerAuth()
@@ -99,5 +100,25 @@ export class TasksController {
     @Param('pageNumber') pageNumber: number,
    ) {
     return await this._tasksService.getBinnaclesOfTask(taskId, {pageSize, pageNumber})
+  }
+
+  @Get('allTasks/pageSize/:pageSize/pageNumber/:pageNumber/keyword?/:keyword?/status?/:status?/daysleft?/:daysleft?/fileFormat?/:fileFormat?')
+  async getFilteredTasks(
+    @Param('pageSize') pageSize: number,
+    @Param('pageNumber') pageNumber: number,
+    @Param('keyword') keyword?: string,
+    @Param('status') status?: string,
+    @Param('daysleft') daysleft?: string,
+    @Param('fileFormat') fileFormat?: string,
+  ) {
+    let params: ParamsDTO = {
+      pageSize: pageSize,
+      pageNumber: pageNumber,
+      keyword: keyword,
+      status: status,
+      daysleft: daysleft,
+      fileFormat: fileFormat
+    }
+    return await this._tasksService.getAllTask(params);
   }
 }

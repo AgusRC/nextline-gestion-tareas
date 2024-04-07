@@ -1,11 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ParamsDTO } from 'src/dtos/params.dto';
 import { TaskDTO } from 'src/dtos/task.dto';
 import { Binnacle } from 'src/entities/binnacle.entity';
 import { Task, TaskStatus } from 'src/entities/task.entity';
 import { User } from 'src/entities/user.entity';
 import { BinnaclesInterface, PaginationBinnacleInterface } from 'src/interfaces/binnacles-interface.interface';
 import { PaginationTaskInterface, TaskInterface } from 'src/interfaces/task-interface.interface';
-import { DataSource, QueryRunner } from 'typeorm';
+import { DataSource, ILike, QueryRunner } from 'typeorm';
 
 @Injectable()
 export class TasksService {
@@ -110,15 +111,48 @@ export class TasksService {
     }
   }
 
-  async getAllTask(params): Promise<PaginationTaskInterface> {
+  async getAllTask(params: ParamsDTO): Promise<PaginationTaskInterface> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+
+      let whereClausure = {
+        active: true,
+      }
+      // revisar filtros
+      if(params.keyword) {
+        whereClausure["title"] = ILike("%"+params.keyword+"%")
+      }
+      if(params.status) {
+        // match status con enum
+        switch (params.status) {
+          case "complete":
+            whereClausure["status"] = TaskStatus.COMPLETE;
+            break;
+          case "inprogress":
+            whereClausure["status"] = TaskStatus.INPROGRESS;
+            break;
+          case "pending":
+            whereClausure["status"] = TaskStatus.PENDING;
+            break;
+          default:
+            throw new HttpException(
+              "status must be complete, inprogress or pending", 
+              HttpStatus.BAD_REQUEST
+            );
+            break;
+        }
+        
+      }
+      if(params.fileFormat) {
+        whereClausure["filename"] = ILike("%."+params.fileFormat)
+      }
+
       let allTask = await queryRunner.manager.find(Task, {
         take: params.pageSize,
         skip: params.pageSize * (params.pageNumber-1),
-        where: {active: true},
+        where: whereClausure,
         select: ['id', 'title', 'description', 'status', 'deadline', 'comments', 'tags', 'filename' ]
       });
 
