@@ -6,15 +6,17 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TasksService } from './tasks/tasks.service';
 import { TasksController } from './tasks/tasks.controller';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
       port: 5432,
-      username: 'postgres',
-      password: 'local_db',
+      username: process.env.DB_USER,
+      password: process.env.DB_PASS,
       database: 'postgres',
       entities: ['./**/*.entity.js'],
       synchronize: true,
