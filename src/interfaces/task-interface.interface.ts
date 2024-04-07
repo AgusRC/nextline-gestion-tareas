@@ -1,12 +1,13 @@
 export interface TaskInterface {
     id: number,
     title: string,
-    description: string,
+    description?: string,
     status: string,
     deadline: string,
-    comments: string,
-    tags: string,
-    //file: null,
+    comments?: string,
+    tags?: string,
+    filename: string,
+    file?: string,
 }
 
 export interface PaginationTaskInterface {

@@ -7,5 +7,6 @@ export class TaskDTO {
   comments?: string;
   tags?: string;
   file?: string;
+  filename?: string;
   status?: TaskStatus;
 }

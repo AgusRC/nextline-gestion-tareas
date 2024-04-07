@@ -44,6 +44,7 @@ export class TasksController {
         throw new HttpException("file must be <5Mb", HttpStatus.BAD_REQUEST)
 
       taskdto.file = Buffer.from(file.buffer).toString('hex');
+      taskdto.filename = file.originalname;
     }
     return await this._tasksService.createTask(taskdto);
   }
@@ -69,6 +70,7 @@ export class TasksController {
         throw new HttpException("file must be <5Mb", HttpStatus.BAD_REQUEST)
 
       taskdto.file = Buffer.from(file.buffer).toString('hex');
+      taskdto.filename = file.originalname;
     }
     
     return await this._tasksService.updateTask(taskId, taskdto);
@@ -77,5 +79,14 @@ export class TasksController {
   @Delete('task/:taskId')
   async deleteTask( @Param('taskId') taskId: number ) {
     return await this._tasksService.deleteTask(taskId);
+  }
+
+  @Get("binnacles/:taskId/pageSize/:pageSize/pageNumber/:pageNumber")
+  async binnaclesOfTask( 
+    @Param('taskId') taskId: number,
+    @Param('pageSize') pageSize: number,
+    @Param('pageNumber') pageNumber: number,
+   ) {
+    return await this._tasksService.getBinnaclesOfTask(taskId, {pageSize, pageNumber})
   }
 }

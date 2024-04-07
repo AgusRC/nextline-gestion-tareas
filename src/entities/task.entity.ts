@@ -43,6 +43,9 @@ export class Task {
   @Column({nullable: true})
   file: string;
 
+  @Column({nullable: true})
+  filename: string;
+
   @Column({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',

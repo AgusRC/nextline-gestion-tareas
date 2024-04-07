@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { TaskDTO } from 'src/dtos/task.dto';
 import { Binnacle } from 'src/entities/binnacle.entity';
 import { Task, TaskStatus } from 'src/entities/task.entity';
+import { BinnaclesInterface, PaginationBinnacleInterface } from 'src/interfaces/binnacles-interface.interface';
 import { PaginationTaskInterface, TaskInterface } from 'src/interfaces/task-interface.interface';
 import { DataSource, QueryRunner } from 'typeorm';
 
@@ -36,6 +37,7 @@ export class TasksService {
       newTask.comments = taskdto.comments ? taskdto.comments : "";
       newTask.tags = taskdto.tags ? taskdto.tags : "";
       newTask.file = taskdto.file ? taskdto.file : null;
+      newTask.filename = taskdto.filename ? taskdto.filename : null;
 
       await queryRunner.manager.save(newTask);
 
@@ -73,6 +75,7 @@ export class TasksService {
       taskToUpdate.comments = taskdto.comments ? taskdto.comments : "";
       taskToUpdate.tags = taskdto.tags ? taskdto.tags : "";
       taskToUpdate.file = taskdto.file ? taskdto.file : null;
+      taskToUpdate.filename = taskdto.filename ? taskdto.filename : null;
 
      
 
@@ -107,18 +110,18 @@ export class TasksService {
       let allTask = await queryRunner.manager.find(Task, {
         take: params.pageSize,
         skip: params.pageSize * (params.pageNumber-1),
-        where: {active: true}
+        where: {active: true},
+        select: ['id', 'title', 'description', 'status', 'deadline', 'comments', 'tags', 'filename' ]
       });
 
       let totalTasksCount = await queryRunner.manager.count(Task, {});
-      let pages = Math.ceil(totalTasksCount / params.pageSize)
 
       await queryRunner.commitTransaction();
 
       let responseTasks: PaginationTaskInterface = {
         page: params.pageNumber,
         page_size: params.pageSize,
-        total_pages: pages,
+        total_pages: Math.ceil(totalTasksCount / params.pageSize),
         tasks: []
       }
 
@@ -128,16 +131,13 @@ export class TasksService {
         let tasksInterface: TaskInterface = {
           id: element.id,
           title: element.title,
-          description: element.description,
           deadline: element.deadline,
-          comments: element.comments,
           status: element.status,
-          tags: element.tags
+          filename: element.filename
         }
 
         responseTasks.tasks.push(tasksInterface)
       }
-      
 
       return responseTasks
     } catch (error) {
@@ -166,7 +166,21 @@ export class TasksService {
         throw new HttpException("task id = " + taskId + " not found", HttpStatus.NOT_FOUND);
 
       await queryRunner.commitTransaction();
-      return task;
+
+      let taskResponse: TaskInterface = {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+        deadline: task.deadline,
+        comments: task.comments,
+        // createdBy
+        tags: task.tags,
+        filename: task.filename,
+        file: task.file
+      }
+
+      return taskResponse;
     } catch (error) {
       console.log(error);
       await queryRunner.rollbackTransaction();
@@ -188,10 +202,9 @@ export class TasksService {
           active: true,
         }
       })
-      console.log(taskToDelete)
 
       if(!taskToDelete) 
-        throw new HttpException("task id = " + taskId + " not found", HttpStatus.NOT_FOUND)
+        throw new HttpException("task id = " + taskId + " not found", HttpStatus.NOT_FOUND);
 
       taskToDelete.active = false;
       taskToDelete.updatedDate = new Date().toISOString();
@@ -204,9 +217,9 @@ export class TasksService {
       await queryRunner.commitTransaction();
       return true;
     } catch (error) {
-      console.log(error)
+      console.log(error);
       await queryRunner.rollbackTransaction();
-      throw error
+      throw error;
     } finally {
       await queryRunner.release();
     }
@@ -216,10 +229,71 @@ export class TasksService {
     try {
       let newBinnacle = new Binnacle();
       newBinnacle.task = task;
+
+      // no guardar hex en json
+      delete task.file;
       newBinnacle.history = JSON.stringify(task);
       await queryRunner.manager.save(newBinnacle);
     } catch (error) {
+      throw error;
+    }
+  }
+
+  async getBinnaclesOfTask(taskId: number, params) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      //
+      let task = await queryRunner.manager.findOne(Task, {
+        where: {
+          id: taskId,
+        },
+      })
+
+      if(!task) throw new HttpException("task id = " + taskId + " not found", HttpStatus.NOT_FOUND);
+
+      // obtener bitacoras
+      let binnaclesOfTask = await queryRunner.manager.find(Binnacle, {
+        //relations: ["task"],
+        where: {
+          task: task
+        },
+        select: ['id', 'createdDate', 'history'],
+        take: params.pageSize,
+        skip: params.pageSize * (params.pageNumber-1),
+      })
+      
+      let totalBinnacles = await queryRunner.manager.count(Binnacle, {
+        where: { task: task }
+      })
+      await queryRunner.commitTransaction();
+
+      let responseBinnacles: PaginationBinnacleInterface = {
+        page: params.pageNumber,
+        page_size: params.pageSize,
+        total_pages: Math.ceil(totalBinnacles / params.pageSize),
+        binnacles: []
+      }
+
+      for (let index = 0; index < binnaclesOfTask.length; index++) {
+        const binnacle = binnaclesOfTask[index];
+        
+        responseBinnacles.binnacles.push({
+          id: binnacle.id,
+          createdDate: binnacle.createdDate,
+          history: binnacle.history
+        })
+      }
+
+      return responseBinnacles;
+    } catch (error) {
+      console.log(error)
+      await queryRunner.rollbackTransaction();
       throw error
+    } finally {
+      await queryRunner.release();
     }
   }
 }
