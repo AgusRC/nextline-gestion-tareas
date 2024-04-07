@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { TaskDTO } from 'src/dtos/task.dto';
+import { Binnacle } from 'src/entities/binnacle.entity';
 import { Task, TaskStatus } from 'src/entities/task.entity';
 import { PaginationTaskInterface, TaskInterface } from 'src/interfaces/task-interface.interface';
 import { DataSource } from 'typeorm';
@@ -36,6 +37,12 @@ export class TasksService {
       newTask.file = taskdto.file ? taskdto.file : null;
 
       await queryRunner.manager.save(newTask);
+
+      // crear bitacora inicial
+      let newBinnacle = new Binnacle();
+      newBinnacle.task = newTask;
+      newBinnacle.history = JSON.stringify(newTask);
+      await queryRunner.manager.save(newBinnacle);
 
       await queryRunner.commitTransaction();
       return newTask.id
@@ -175,7 +182,6 @@ export class TasksService {
         throw new HttpException("task id = " + taskId + " not found", HttpStatus.NOT_FOUND)
 
       let del = await queryRunner.manager.delete(Task, {id: taskId})
-      console.log(del)
 
       await queryRunner.commitTransaction();
       return true;

@@ -54,5 +54,8 @@ export class Task {
     default: () => 'CURRENT_TIMESTAMP',
   })
   updatedDate: string;
+
+  @Column({default: true})
+  active: boolean;
   
 }
