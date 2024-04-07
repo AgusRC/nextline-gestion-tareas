@@ -75,6 +75,7 @@ export class TasksService {
 
       if(!taskToUpdate) 
         throw new HttpException("Task id = " + taskId + " not found", HttpStatus.NOT_FOUND)
+      if(!taskdto.deadline) throw new HttpException("invalid deadline", HttpStatus.BAD_REQUEST)
 
       taskToUpdate.title = taskdto.title;
       taskToUpdate.description = taskdto.description;

@@ -5,7 +5,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TokenData } from 'src/decorators/token.decorator';
 import { TokenInterface } from 'src/interfaces/token-interface.interface';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ParamsDTO } from 'src/dtos/params.dto';
 import { title } from 'process';
 
@@ -18,6 +18,9 @@ export class TasksController {
     private readonly _tasksService: TasksService,
   ) {}
 
+  @ApiOperation({
+    summary: 'Obtiene todos los registros de tareas',
+  })
   @Get('allTasks/pageSize/:pageSize/pageNumber/:pageNumber')
   async getAllTasks(
     @Param('pageSize') pageSize: number,
@@ -26,6 +29,9 @@ export class TasksController {
     return await this._tasksService.getAllTask({pageSize, pageNumber});
   }
 
+  @ApiOperation({
+    summary: 'Obtiene los detalles de una tarea por su Id',
+  })
   @Get("task/:taskId")
   async getTaskById(
     @Param('taskId') taskId: number,
@@ -35,21 +41,23 @@ export class TasksController {
   }
 
   @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'registra una nueva tarea',
+  })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        title: { type: 'string' },
-        description: { type: 'integer' },
-        deadline: { type: 'integer' },
-        comments: { type: 'integer', nullable: true },
-        tags: { type: 'integer', nullable: true },
+        title: { type: 'string'  },
+        description: { type: 'string' },
+        deadline: { type: 'string', example: "2024-04-10T00:00:00.359Z" },
+        comments: { type: 'string', nullable: true },
+        tags: { type: 'string', nullable: true },
         file: {
           type: 'string',
           format: 'binary',
           nullable: true
         },
-        status: { type: 'integer', nullable: true },
       },
     },
   })
@@ -88,16 +96,16 @@ export class TasksController {
       type: 'object',
       properties: {
         title: { type: 'string' },
-        description: { type: 'integer' },
-        deadline: { type: 'integer' },
-        comments: { type: 'integer', nullable: true },
-        tags: { type: 'integer', nullable: true },
+        description: { type: 'string' },
+        deadline: { type: 'string',  example: "2024-04-10T00:00:00.359Z" },
+        comments: { type: 'string', nullable: true },
+        tags: { type: 'string', nullable: true },
         file: {
           type: 'string',
           format: 'binary',
           nullable: true
         },
-        status: { type: 'integer', nullable: true },
+        status: { type: 'string', nullable: true, enum: ['pending', 'inprogress', 'complete'] },
       },
     },
   })
@@ -127,11 +135,18 @@ export class TasksController {
     return await this._tasksService.updateTask(taskId, taskdto);
   }
 
+  @ApiOperation({
+    summary: 'elimina una tarea segun su Id',
+  })
   @Delete('task/:taskId')
   async deleteTask( @Param('taskId') taskId: number ) {
     return await this._tasksService.deleteTask(taskId);
   }
 
+
+  @ApiOperation({
+    summary: 'Obtiene todos las bitacoras de una tarea, por id de tarea',
+  })
   @Get("binnacles/:taskId/pageSize/:pageSize/pageNumber/:pageNumber")
   async binnaclesOfTask( 
     @Param('taskId') taskId: number,
@@ -141,7 +156,10 @@ export class TasksController {
     return await this._tasksService.getBinnaclesOfTask(taskId, {pageSize, pageNumber})
   }
 
-  @Get('allTasks/pageSize/:pageSize/pageNumber/:pageNumber/keyword?/:keyword?/status?/:status?/daysleft?/:daysleft?/fileFormat?/:fileFormat?')
+  @ApiOperation({
+    summary: 'Obtiene todos los registros de tareas segun los filtros',
+  })
+  @Get('allTasks/pageSize/:pageSize/pageNumber/:pageNumber/keyword/:keyword/status/:status/daysleft/:daysleft/fileFormat/:fileFormat')
   async getFilteredTasks(
     @Param('pageSize') pageSize: number,
     @Param('pageNumber') pageNumber: number,

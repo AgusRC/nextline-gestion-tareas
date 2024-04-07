@@ -9,6 +9,7 @@ async function bootstrap() {
     .setTitle('Gestion tareas')
     .setDescription('API para gestion de tareas, prueba tecnica Nextline')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
