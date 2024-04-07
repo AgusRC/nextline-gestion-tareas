@@ -3,7 +3,10 @@ import { TasksService } from './tasks.service';
 import { TaskDTO } from 'src/dtos/task.dto';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { TokenData } from 'src/decorators/token.decorator';
+import { TokenInterface } from 'src/interfaces/token-interface.interface';
 
+@UseGuards(JwtAuthGuard)
 @Controller('tasks')
 export class TasksController {
   constructor(
@@ -19,16 +22,19 @@ export class TasksController {
   }
 
   @Get("task/:taskId")
-  async getTaskById(@Param('taskId') taskId: number) {
+  async getTaskById(
+    @Param('taskId') taskId: number,
+    @TokenData() token: TokenInterface,
+  ) {
     return await this._tasksService.getTaskDetail(taskId)
   }
 
-  //@UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   @Post('registerTask')
   async registreTask(
     @Body() taskdto: TaskDTO,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
+    @TokenData() token: TokenInterface,
   ) {
 
     if(file) {
@@ -46,6 +52,8 @@ export class TasksController {
       taskdto.file = Buffer.from(file.buffer).toString('hex');
       taskdto.filename = file.originalname;
     }
+
+    taskdto.userId = token.userid;
     return await this._tasksService.createTask(taskdto);
   }
 

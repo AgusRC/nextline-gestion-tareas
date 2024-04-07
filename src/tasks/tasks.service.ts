@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { TaskDTO } from 'src/dtos/task.dto';
 import { Binnacle } from 'src/entities/binnacle.entity';
 import { Task, TaskStatus } from 'src/entities/task.entity';
+import { User } from 'src/entities/user.entity';
 import { BinnaclesInterface, PaginationBinnacleInterface } from 'src/interfaces/binnacles-interface.interface';
 import { PaginationTaskInterface, TaskInterface } from 'src/interfaces/task-interface.interface';
 import { DataSource, QueryRunner } from 'typeorm';
@@ -38,6 +39,13 @@ export class TasksService {
       newTask.tags = taskdto.tags ? taskdto.tags : "";
       newTask.file = taskdto.file ? taskdto.file : null;
       newTask.filename = taskdto.filename ? taskdto.filename : null;
+
+      // buscar usuario
+      let user = await queryRunner.manager.findOne(User, {
+        where: { id: taskdto.userId }
+      });
+
+      newTask.createdBy = user;
 
       await queryRunner.manager.save(newTask);
 
@@ -133,7 +141,7 @@ export class TasksService {
           title: element.title,
           deadline: element.deadline,
           status: element.status,
-          filename: element.filename
+          filename: element.filename,
         }
 
         responseTasks.tasks.push(tasksInterface)
@@ -159,11 +167,20 @@ export class TasksService {
         where: {
           id: taskId,
           active: true
-        }
+        },
+        relations: ['createdBy']
       });
 
       if(!task) 
         throw new HttpException("task id = " + taskId + " not found", HttpStatus.NOT_FOUND);
+
+      // conseguir nombre de usuario
+      let userId = task.createdBy ? task.createdBy.id : 0
+      
+      let user = await queryRunner.manager.findOne(User, {
+        where: { id: userId }
+      })
+      let username = user ? user.name : ""
 
       await queryRunner.commitTransaction();
 
@@ -174,7 +191,7 @@ export class TasksService {
         status: task.status,
         deadline: task.deadline,
         comments: task.comments,
-        // createdBy
+        createdBy: username,
         tags: task.tags,
         filename: task.filename,
         file: task.file

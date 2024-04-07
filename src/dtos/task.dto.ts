@@ -9,4 +9,5 @@ export class TaskDTO {
   file?: string;
   filename?: string;
   status?: TaskStatus;
+  userId: number;
 }

@@ -6,6 +6,7 @@ export interface TaskInterface {
     deadline: string,
     comments?: string,
     tags?: string,
+    createdBy?: string,
     filename: string,
     file?: string,
 }
