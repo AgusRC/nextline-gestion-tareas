@@ -156,14 +156,15 @@ export class TasksService {
         select: ['id', 'title', 'description', 'status', 'deadline', 'comments', 'tags', 'filename' ]
       });
 
-      let totalTasksCount = await queryRunner.manager.count(Task, {});
+      let totalTasksCount = await queryRunner.manager.count(Task, {where: whereClausure});
 
       await queryRunner.commitTransaction();
 
       let responseTasks: PaginationTaskInterface = {
-        page: params.pageNumber,
-        page_size: params.pageSize,
+        page: Number(params.pageNumber),
+        page_size: Number(params.pageSize),
         total_pages: Math.ceil(totalTasksCount / params.pageSize),
+        total_results: totalTasksCount,
         tasks: []
       }
 
@@ -322,9 +323,10 @@ export class TasksService {
       await queryRunner.commitTransaction();
 
       let responseBinnacles: PaginationBinnacleInterface = {
-        page: params.pageNumber,
-        page_size: params.pageSize,
+        page: Number(params.pageNumber),
+        page_size: Number(params.pageSize),
         total_pages: Math.ceil(totalBinnacles / params.pageSize),
+        total_results: totalBinnacles,
         binnacles: []
       }
 

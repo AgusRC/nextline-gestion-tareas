@@ -15,5 +15,6 @@ export interface PaginationTaskInterface {
   page: number,
   page_size: number,
   total_pages: number,
+  total_results: number,
   tasks: TaskInterface[]
 }
