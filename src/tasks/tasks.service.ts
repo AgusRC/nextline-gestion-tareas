@@ -159,13 +159,15 @@ export class TasksService {
         take: params.pageSize,
         skip: params.pageSize * (params.pageNumber-1),
         where: whereClausure,
-        select: ['id', 'title', 'description', 'status', 'deadline', 'comments', 'tags', 'filename' ]
+        select: ['id', 'title', 'description', 'status', 'deadline', 'comments', 'tags', 'filename' ],
+        relations: ['createdBy']
       });
 
       let totalTasksCount = await queryRunner.manager.count(Task, {where: whereClausure});
 
-      await queryRunner.commitTransaction();
+      
 
+      
       let responseTasks: PaginationTaskInterface = {
         page: Number(params.pageNumber),
         page_size: Number(params.pageSize),
@@ -173,9 +175,17 @@ export class TasksService {
         total_results: totalTasksCount,
         tasks: []
       }
-
+      
       for (let index = 0; index < allTask.length; index++) {
         const element = allTask[index];
+        
+
+        let userId = element.createdBy ? element.createdBy.id : 0
+      
+        let user = await queryRunner.manager.findOne(User, {
+          where: { id: userId }
+        })
+        let username = user ? user.name : ""
 
         let tasksInterface: TaskInterface = {
           id: element.id,
@@ -183,11 +193,13 @@ export class TasksService {
           deadline: element.deadline,
           status: element.status,
           filename: element.filename,
+          createdBy: username,
         }
-
+        
         responseTasks.tasks.push(tasksInterface)
       }
-
+      
+      await queryRunner.commitTransaction();
       return responseTasks
     } catch (error) {
       console.log(error)
