@@ -1,26 +1,66 @@
 
-import { Injectable } from '@nestjs/common';
-
-// TODO impl typerom
-// This should be a real class/interface representing a user entity
-export type User = any;
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { userDTO } from 'src/dtos/user.dto';
+import { User } from 'src/entities/user.entity';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  private readonly users = [
-    {
-      userId: 1,
-      username: 'john',
-      password: 'changeme',
-    },
-    {
-      userId: 2,
-      username: 'maria',
-      password: 'guess',
-    },
-  ];
+  constructor(
+    private readonly dataSource: DataSource,
+  ){}
 
   async findOne(username: string): Promise<User | undefined> {
-    return this.users.find(user => user.username === username);
+    const queryRunner = this.dataSource.createQueryRunner();
+    
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      //
+      let user = await queryRunner.manager.findOne(User, {
+        where: { name: username }
+      });
+
+      return user;
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      console.log(error)
+      await queryRunner.rollbackTransaction();
+      throw error
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async registerUser(userdto: userDTO) {
+    const queryRunner = this.dataSource.createQueryRunner();
+    
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      if(await queryRunner.manager.findOne(User, {where: {name: userdto.name}}))
+        throw new HttpException("name is already in use", HttpStatus.BAD_REQUEST);
+
+      let newUser = new User();
+      newUser.name = userdto.name;
+      newUser.pass = await this.hashPassword(userdto.pass);
+
+      await queryRunner.manager.save(newUser);
+
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+      console.log(error)
+      await queryRunner.rollbackTransaction();
+      throw error
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  private async hashPassword(password: string): Promise<string> {
+    const salt = await bcrypt.genSalt(10);
+    return await bcrypt.hash(password, salt);
   }
 }
