@@ -6,7 +6,7 @@ import { Task, TaskStatus } from 'src/entities/task.entity';
 import { User } from 'src/entities/user.entity';
 import { BinnaclesInterface, PaginationBinnacleInterface } from 'src/interfaces/binnacles-interface.interface';
 import { PaginationTaskInterface, TaskInterface } from 'src/interfaces/task-interface.interface';
-import { DataSource, ILike, QueryRunner } from 'typeorm';
+import { Between, DataSource, ILike, QueryRunner } from 'typeorm';
 
 @Injectable()
 export class TasksService {
@@ -143,10 +143,15 @@ export class TasksService {
             );
             break;
         }
-        
       }
       if(params.fileFormat) {
         whereClausure["filename"] = ILike("%."+params.fileFormat)
+      }
+      if(params.daysleft) {
+        let estimateDate = new Date();
+        let posEstimateDate = estimateDate.setDate(estimateDate.getDate() + Number(params.daysleft) + 1)
+        let pretEstimateDate = estimateDate.setDate(estimateDate.getDate() - 2)
+        whereClausure['deadline'] = Between(new Date(pretEstimateDate), new Date(posEstimateDate))
       }
 
       let allTask = await queryRunner.manager.find(Task, {

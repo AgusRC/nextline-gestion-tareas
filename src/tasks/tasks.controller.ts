@@ -5,8 +5,9 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TokenData } from 'src/decorators/token.decorator';
 import { TokenInterface } from 'src/interfaces/token-interface.interface';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { ParamsDTO } from 'src/dtos/params.dto';
+import { title } from 'process';
 
 @ApiTags('Tasks')
 @ApiBearerAuth()
@@ -33,6 +34,25 @@ export class TasksController {
     return await this._tasksService.getTaskDetail(taskId)
   }
 
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'integer' },
+        deadline: { type: 'integer' },
+        comments: { type: 'integer', nullable: true },
+        tags: { type: 'integer', nullable: true },
+        file: {
+          type: 'string',
+          format: 'binary',
+          nullable: true
+        },
+        status: { type: 'integer', nullable: true },
+      },
+    },
+  })
   @UseInterceptors(FileInterceptor('file'))
   @Post('registerTask')
   async registreTask(
@@ -61,7 +81,26 @@ export class TasksController {
     return await this._tasksService.createTask(taskdto);
   }
 
+  @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'integer' },
+        deadline: { type: 'integer' },
+        comments: { type: 'integer', nullable: true },
+        tags: { type: 'integer', nullable: true },
+        file: {
+          type: 'string',
+          format: 'binary',
+          nullable: true
+        },
+        status: { type: 'integer', nullable: true },
+      },
+    },
+  })
   @Put('editTask/:taskId')
   async editTask(
     @Param('taskId') taskId: number,
