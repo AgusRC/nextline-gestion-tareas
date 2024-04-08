@@ -24,7 +24,8 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+ Sistema de Gestión de Tareas
+ Nextline
 
 ## Installation
 
@@ -41,33 +42,36 @@ $ npm run start
 # watch mode
 $ npm run start:dev
 
-# production mode
-$ npm run start:prod
 ```
 
-## Test
+## Docs
+para consultar Swagger: [swagger](http://localhost:3000/api/)
+
+la aplicacion se monta en una BD local de postgres, para pruebas locales utilice un contenedor de docker-compose con la siguiente configuracion:
 
 ```bash
-# unit tests
-$ npm run test
+version: '3.9'
 
-# e2e tests
-$ npm run test:e2e
+services:
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - 5432:5432
+    volumes:
+      - ~/apps/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=local_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
 
-# test coverage
-$ npm run test:cov
 ```
 
-## Support
+en app.module.ts se conecta a la BD a travez de variables de entorno (archivo .env):
+```bash
+DB_HOST=127.0.0.1
+DB_USER=postgres
+DB_PASS=local_db
+DB_NAME=postgres
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
