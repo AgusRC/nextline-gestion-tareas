@@ -1,7 +1,8 @@
 export interface BinnaclesInterface {
   id: number,
-  history: string,
   createdDate: string,
+  createdBy: string,
+  history: string,
 }
 
 export interface PaginationBinnacleInterface {

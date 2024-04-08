@@ -51,7 +51,7 @@ export class TasksService {
       await queryRunner.manager.save(newTask);
 
       // crear bitacora inicial
-      this.registerBinnacle(queryRunner, newTask);
+      this.registerBinnacle(queryRunner, newTask, taskdto.userId);
 
       await queryRunner.commitTransaction();
       return newTask.id
@@ -98,7 +98,7 @@ export class TasksService {
       taskToUpdate.updatedDate = new Date().toISOString();
 
       // registrar bitacora
-      this.registerBinnacle(queryRunner, taskToUpdate);
+      this.registerBinnacle(queryRunner, taskToUpdate, taskdto.userId);
 
       await queryRunner.manager.update(Task, taskId, taskToUpdate)
       await queryRunner.commitTransaction();
@@ -260,7 +260,7 @@ export class TasksService {
     }
   }
 
-  async deleteTask(taskId: number) {
+  async deleteTask(taskId: number, userId: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     
     await queryRunner.connect();
@@ -282,7 +282,7 @@ export class TasksService {
       await queryRunner.manager.save(taskToDelete);
 
       // registrar bitacora
-      this.registerBinnacle(queryRunner, taskToDelete);
+      this.registerBinnacle(queryRunner, taskToDelete, userId);
 
       await queryRunner.commitTransaction();
       return true;
@@ -295,10 +295,16 @@ export class TasksService {
     }
   }
 
-  private async registerBinnacle(queryRunner: QueryRunner, task: Task) {
+  private async registerBinnacle(queryRunner: QueryRunner, task: Task, userId: number) {
     try {
       let newBinnacle = new Binnacle();
       newBinnacle.task = task;
+
+      let userEditor = await queryRunner.manager.findOne(User, { 
+          where: {id: userId}
+      });
+
+      newBinnacle.createdBy = userEditor;
 
       // no guardar hex en json
       delete task.file;
@@ -326,19 +332,18 @@ export class TasksService {
 
       // obtener bitacoras
       let binnaclesOfTask = await queryRunner.manager.find(Binnacle, {
-        //relations: ["task"],
         where: {
           task: {id: task.id}
         },
         select: ['id', 'createdDate', 'history'],
         take: params.pageSize,
         skip: params.pageSize * (params.pageNumber-1),
+        relations: ['createdBy']
       })
       
       let totalBinnacles = await queryRunner.manager.count(Binnacle, {
         where: { task: {id: task.id} }
       })
-      await queryRunner.commitTransaction();
 
       let responseBinnacles: PaginationBinnacleInterface = {
         page: Number(params.pageNumber),
@@ -351,13 +356,16 @@ export class TasksService {
       for (let index = 0; index < binnaclesOfTask.length; index++) {
         const binnacle = binnaclesOfTask[index];
         
+        let userEditor = binnacle.createdBy ? binnacle.createdBy.name : "";
         responseBinnacles.binnacles.push({
           id: binnacle.id,
           createdDate: binnacle.createdDate,
+          createdBy: userEditor,
           history: binnacle.history
         })
       }
 
+      await queryRunner.commitTransaction();
       return responseBinnacles;
     } catch (error) {
       console.log(error)

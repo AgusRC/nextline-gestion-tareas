@@ -1,5 +1,6 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Task } from "./task.entity";
+import { User } from "./user.entity";
 
 @Entity()
 export class Binnacle {
@@ -18,5 +19,9 @@ export class Binnacle {
     default: () => 'CURRENT_TIMESTAMP',
   })
   createdDate: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn()
+  createdBy: User;
 
 }

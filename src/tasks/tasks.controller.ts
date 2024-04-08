@@ -113,7 +113,8 @@ export class TasksController {
   async editTask(
     @Param('taskId') taskId: number,
     @Body() taskdto: TaskDTO,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file: Express.Multer.File,
+    @TokenData() token: TokenInterface,
   ) {
 
     if(file) {
@@ -131,7 +132,7 @@ export class TasksController {
       taskdto.file = Buffer.from(file.buffer).toString('hex');
       taskdto.filename = file.originalname;
     }
-    
+    taskdto.userId = token.userid;
     return await this._tasksService.updateTask(taskId, taskdto);
   }
 
@@ -139,8 +140,12 @@ export class TasksController {
     summary: 'elimina una tarea segun su Id',
   })
   @Delete('task/:taskId')
-  async deleteTask( @Param('taskId') taskId: number ) {
-    return await this._tasksService.deleteTask(taskId);
+  async deleteTask( 
+    @Param('taskId') taskId: number,
+    @TokenData() token: TokenInterface,
+  ) {
+
+    return await this._tasksService.deleteTask(taskId, token.userid);
   }
 
 
