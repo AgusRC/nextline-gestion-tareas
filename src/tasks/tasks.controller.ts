@@ -105,7 +105,7 @@ export class TasksController {
           format: 'binary',
           nullable: true
         },
-        status: { type: 'string', nullable: true, enum: ['pending', 'inprogress', 'complete'] },
+        status: { type: 'string', nullable: true, enum: ['pending', 'in progress', 'complete'] },
       },
     },
   })

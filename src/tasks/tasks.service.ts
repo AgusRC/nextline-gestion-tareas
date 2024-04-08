@@ -302,7 +302,7 @@ export class TasksService {
 
       // no guardar hex en json
       delete task.file;
-      newBinnacle.history = JSON.stringify(task);
+      newBinnacle.history = JSON.stringify(task, null, 4);
       await queryRunner.manager.save(newBinnacle);
     } catch (error) {
       throw error;
@@ -328,7 +328,7 @@ export class TasksService {
       let binnaclesOfTask = await queryRunner.manager.find(Binnacle, {
         //relations: ["task"],
         where: {
-          task: task
+          task: {id: task.id}
         },
         select: ['id', 'createdDate', 'history'],
         take: params.pageSize,
@@ -336,7 +336,7 @@ export class TasksService {
       })
       
       let totalBinnacles = await queryRunner.manager.count(Binnacle, {
-        where: { task: task }
+        where: { task: {id: task.id} }
       })
       await queryRunner.commitTransaction();
 
