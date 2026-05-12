@@ -74,4 +74,58 @@ DB_PASS=local_db
 DB_NAME=postgres
 ```
 
+## Descripcion original
+
+RESTful API - Sistema de Gestión de Tareas
+Ejercicio práctico para posición de Desarrollador Backend
+
+Deberás crear una API REST para un sistema de gestión de tareas. A través de
+este sistema un usuario podrá visualizar, agregar, editar o eliminar sus tareas
+personales. Cada tarea debe tener un estado asociado, que puede ser
+"pendiente", "en progreso" o "completada". Además, las rutas para acceder
+a las tareas deben estar protegidas, y solo los usuarios autenticados deberían
+poder acceder a ellas.
+
+Cada tarea debe tener:
+1. Título (Obligatorio)
+2. Descripción (Obligatorio)
+3. Estatus de compleción (Obligatorio)
+4. Fecha de entrega (Obligatorio)
+5. Comentarios (Opcional)
+6. Creado por (Obligatorio)
+7. Tags (Opcional)
+8. Archivo (Opcional, no mayor a 5MB y sólo formatos .PDF; .PNG y .JPG)
+
+Endpoints mínimos necesarios disponibles en la API:
+1. GET -> Regresa información breve de todas las tareas
+2. GET -> Regresa toda la información de una tarea
+3. POST -> Crear una tarea
+4. PUT -> Editar una tarea
+5. DELETE -> Borrar una tarea
+
+Consideraciones y requisitos adicionales:
+1. El sistema debe guardar una bitácora de todos los movimientos
+realizados
+2. Los métodos GET deben funcionar para fines de paginación en el
+Frontend y mostrar cuántos resultados encontró en cada llamada en la
+misma respuesta
+3. Búsqueda de tareas:
+a. Un usuario puede realizar una búsqueda de tareas
+b. Las tareas se ponderan según el match de sus campos con lo
+siguiente:
+i. Palabra clave
+
+ii. Estatus de compleción
+iii. Días restantes para vencimiento
+iv. Formato de archivo
+
+Aspectos a evaluar:
+1. Uso de NestJS
+2. Uso de TypeORM
+3. Implementar autenticación JWT para proteger las rutas de las tareas
+4. Implementar un manejo adecuado de transacciones para garantizar la
+integridad de los datos en operaciones complejas
+5. Estructura del proyecto
+6. Documentación de endpoints
+7. Uso de buenas prácticas de programación
 
